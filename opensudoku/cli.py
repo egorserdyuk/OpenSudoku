@@ -46,6 +46,14 @@ class CLIInterface:
             help="Number of Sudoku puzzles per page",
         )
 
+        # Puzzle spacing
+        self.parser.add_argument(
+            "--spacing",
+            type=float,
+            default=None,
+            help="Spacing between puzzles in mm (default: 5mm)",
+        )
+
         # Output file
         self.parser.add_argument(
             "--output", default="sudoku_puzzles.pdf", help="Output PDF filename"
@@ -110,6 +118,9 @@ class ApplicationController:
         print(f"  Sheet size: {args.sheet_size}")
         print(f"  Pages: {args.pages}")
         print(f"  Puzzles per page: {args.puzzles_per_page}")
+        print(
+            f"  Spacing: {args.spacing if args.spacing is not None else 'default (5mm)'}"
+        )
         print(f"  Output file: {args.output}")
         print(f"  Include solutions: {args.solutions}")
 
@@ -124,7 +135,9 @@ class ApplicationController:
         print(f"Generated {len(puzzles)} puzzles successfully")
 
         # Calculate layout
-        layout_calc = LayoutCalculator(args.sheet_size, args.puzzles_per_page)
+        layout_calc = LayoutCalculator(
+            args.sheet_size, args.puzzles_per_page, args.spacing
+        )
 
         # Generate PDF
         print("Creating PDF...")

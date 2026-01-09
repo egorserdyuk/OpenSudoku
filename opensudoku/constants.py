@@ -15,6 +15,7 @@ DEFAULT_SHEET_SIZE = "A4"
 DEFAULT_PAGES = 1
 DEFAULT_PUZZLES_PER_PAGE = 4
 DEFAULT_MARGIN = 10  # mm
+DEFAULT_PUZZLE_SPACING = 5  # mm (spacing between puzzles)
 
 # Difficulty settings - number of cells to remove
 DIFFICULTY_SETTINGS = {

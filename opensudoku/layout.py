@@ -1,4 +1,4 @@
-from .constants import PAPER_SIZES, DEFAULT_MARGIN, MM_TO_POINTS
+from .constants import PAPER_SIZES, DEFAULT_MARGIN, MM_TO_POINTS, DEFAULT_PUZZLE_SPACING
 
 
 class SheetDimensions:
@@ -19,9 +19,14 @@ class SheetDimensions:
 class LayoutCalculator:
     """Calculate optimal puzzle positioning on sheets."""
 
-    def __init__(self, sheet_size, puzzles_per_page):
+    def __init__(self, sheet_size, puzzles_per_page, puzzle_spacing=None):
         self.sheet_dimensions = SheetDimensions(sheet_size)
         self.puzzles_per_page = puzzles_per_page
+        self.puzzle_spacing = (
+            puzzle_spacing
+            if puzzle_spacing is not None
+            else DEFAULT_PUZZLE_SPACING * MM_TO_POINTS
+        )
 
     def calculate_grid_layout(self):
         """Determine optimal rows and columns for puzzle grid."""
@@ -57,11 +62,15 @@ class LayoutCalculator:
             row = puzzle_idx // cols
             col = puzzle_idx % cols
 
-            x = self.sheet_dimensions.margin + col * puzzle_width
+            # Calculate position with spacing between puzzles
+            x = self.sheet_dimensions.margin + col * (
+                puzzle_width + self.puzzle_spacing
+            )
             y = (
                 self.sheet_dimensions.height_points
                 - self.sheet_dimensions.margin
                 - (row + 1) * puzzle_height
+                - row * self.puzzle_spacing
             )
 
             positions.append(
@@ -77,10 +86,19 @@ class LayoutCalculator:
         return positions
 
     def optimize_puzzle_size(self, rows, cols):
-        """Maximize puzzle size while maintaining margins."""
-        # Calculate available space per puzzle
-        available_width = self.sheet_dimensions.content_width / cols
-        available_height = self.sheet_dimensions.content_height / rows
+        """Maximize puzzle size while maintaining margins and spacing."""
+        # Calculate available space per puzzle, accounting for spacing
+        # Total spacing between puzzles: (cols-1) * spacing horizontally, (rows-1) * spacing vertically
+        total_spacing_width = (cols - 1) * self.puzzle_spacing
+        total_spacing_height = (rows - 1) * self.puzzle_spacing
+
+        # Available space for puzzles after accounting for spacing
+        available_width = (
+            self.sheet_dimensions.content_width - total_spacing_width
+        ) / cols
+        available_height = (
+            self.sheet_dimensions.content_height - total_spacing_height
+        ) / rows
 
         # Use the smaller dimension to maintain square puzzles
         puzzle_size = min(available_width, available_height)
