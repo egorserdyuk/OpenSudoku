@@ -1,3 +1,4 @@
+# OpenSudoku dependencies
 reportlab>=4.0.0    # PDF generation
 numpy>=1.26.0       # Array operations for puzzle generation
-click>=8.1.0        # CLI interface (alternative: argparse)
+click>=8.1.0        # CLI interface

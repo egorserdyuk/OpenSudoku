@@ -259,4 +259,8 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Other
+ARCHITECTURE.md
+*.pdf
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,linux,macos,python,venv

@@ -1,0 +1,102 @@
+from .constants import PAPER_SIZES, DEFAULT_MARGIN, MM_TO_POINTS
+
+
+class SheetDimensions:
+    """Paper size specifications in mm and points."""
+
+    def __init__(self, sheet_size):
+        self.sheet_size = sheet_size
+        self.width_mm, self.height_mm = PAPER_SIZES[sheet_size]
+        self.width_points = self.width_mm * MM_TO_POINTS
+        self.height_points = self.height_mm * MM_TO_POINTS
+        self.margin = DEFAULT_MARGIN * MM_TO_POINTS
+
+        # Available content area (excluding margins)
+        self.content_width = self.width_points - 2 * self.margin
+        self.content_height = self.height_points - 2 * self.margin
+
+
+class LayoutCalculator:
+    """Calculate optimal puzzle positioning on sheets."""
+
+    def __init__(self, sheet_size, puzzles_per_page):
+        self.sheet_dimensions = SheetDimensions(sheet_size)
+        self.puzzles_per_page = puzzles_per_page
+
+    def calculate_grid_layout(self):
+        """Determine optimal rows and columns for puzzle grid."""
+        # Try to find the most square-like arrangement
+        best_cols = 1
+        best_rows = self.puzzles_per_page
+        best_ratio = float("inf")
+
+        for cols in range(1, self.puzzles_per_page + 1):
+            if self.puzzles_per_page % cols != 0:
+                continue
+
+            rows = self.puzzles_per_page // cols
+            ratio = max(rows / cols, cols / rows)
+
+            if ratio < best_ratio:
+                best_ratio = ratio
+                best_cols = cols
+                best_rows = rows
+
+        return best_rows, best_cols
+
+    def compute_puzzle_positions(self):
+        """Calculate x,y coordinates for each puzzle."""
+        rows, cols = self.calculate_grid_layout()
+
+        # Calculate puzzle size
+        puzzle_width, puzzle_height = self.optimize_puzzle_size(rows, cols)
+
+        positions = []
+
+        for puzzle_idx in range(self.puzzles_per_page):
+            row = puzzle_idx // cols
+            col = puzzle_idx % cols
+
+            x = self.sheet_dimensions.margin + col * puzzle_width
+            y = (
+                self.sheet_dimensions.height_points
+                - self.sheet_dimensions.margin
+                - (row + 1) * puzzle_height
+            )
+
+            positions.append(
+                {
+                    "x": x,
+                    "y": y,
+                    "width": puzzle_width,
+                    "height": puzzle_height,
+                    "puzzle_number": puzzle_idx + 1,
+                }
+            )
+
+        return positions
+
+    def optimize_puzzle_size(self, rows, cols):
+        """Maximize puzzle size while maintaining margins."""
+        # Calculate available space per puzzle
+        available_width = self.sheet_dimensions.content_width / cols
+        available_height = self.sheet_dimensions.content_height / rows
+
+        # Use the smaller dimension to maintain square puzzles
+        puzzle_size = min(available_width, available_height)
+
+        return puzzle_size, puzzle_size
+
+    def get_sheet_dimensions(self):
+        """Return sheet dimensions object."""
+        return self.sheet_dimensions
+
+    def get_max_puzzles_for_sheet(self):
+        """Calculate maximum number of puzzles that fit on sheet."""
+        # This is a rough estimate based on minimum puzzle size
+        min_puzzle_size = 50 * MM_TO_POINTS  # Minimum 50mm per puzzle
+
+        max_cols = int(self.sheet_dimensions.content_width / min_puzzle_size)
+        max_rows = int(self.sheet_dimensions.content_height / min_puzzle_size)
+
+        return max_cols * max_rows
